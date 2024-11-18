@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Text Message</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar bg-body-tertiary fixed-top">
+        <div class="container-fluid">
+            <div class="d-flex">
+                <a class="navbar-brand active nav-link-hover px-3" href="dashboard.html">
+                    <strong>Dashboard</strong>
+                </a>
+            </div>
+
+            <div class="d-flex ms-auto">
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Modal Logout -->
+    <div class="modal fade" id="logoutModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Apakah Anda yakin ingin Logout?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tidak</button>
+                    <button type="button" class="btn btn-danger" onclick="handleLogout()">Ya</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Message Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmationModalMessage">
+                    <!-- Pesan akan diisi dengan JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="messages.html" class="btn btn-primary">See Messages</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-5 pt-4">
+        <h1 class="text-center">Send Text Message</h1>
+        <form id="sendTextForm">
+            <div class="mb-3">
+                <label for="receiverId" class="form-label">Receiver ID</label>
+                <input type="text" class="form-control border border-dark" id="receiverId" name="receiver_id" placeholder="Receiver ID"
+                    readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="senderId" class="form-label">Sender ID</label>
+                <input type="text" class="form-control border border-dark" id="senderId" name="sender_id" placeholder="Sender ID" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="messageType" class="form-label">Message Type</label>
+                <input type="text" class="form-control border border-dark" id="messageType" name="message_type" value="text" readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="textMessage" class="form-label">Message</label>
+                <textarea class="form-control border border-dark" id="textMessage" name="text" rows="5"
+                    placeholder="Enter your message"></textarea>
+            </div>
+
+            <center>
+                <button type="submit" class="btn btn-primary mt-2 mb-5">Send Message</button>
+                <button type="button" class="btn btn-outline-danger mt-2 mb-5" id="backButton">Back to Messages</button>
+            </center>
+        </form>
+    </div>
+
+    <script>
+        window.onload = () => {
+            const receiverId = sessionStorage.getItem('receiverId');
+            const token = sessionStorage.getItem('token');
+
+            if (!receiverId || !token) {
+                alert("Receiver ID or Token is missing. Redirecting...");
+                window.location.href = "dashboard.html";
+                return;
+            }
+
+            // Set receiver ID in the input field
+            document.getElementById('receiverId').value = receiverId;
+
+            // Decode token to extract sender ID
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            document.getElementById('senderId').value = payload.id;
+        };
+
+        // Helper function untuk kembali ke halaman messages
+        function returnToMessages() {
+            const userB_id = sessionStorage.getItem('userB_id');
+            const token = sessionStorage.getItem('token');
+
+            if (userB_id && token) {
+                sessionStorage.setItem('userB_id', userB_id);
+                sessionStorage.setItem('token', token);
+            }
+            window.location.href = 'messages.html';
+        }
+
+        document.getElementById('sendTextForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const receiver_id = document.getElementById('receiverId').value;
+            const text = document.getElementById('textMessage').value;
+            const token = sessionStorage.getItem('token');
+
+            // Mengambil elemen modal dan elemen pesan modal
+            const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            const modalMessage = document.getElementById('confirmationModalMessage');
+
+            if (!text.trim()) {
+                modalMessage.textContent = 'Message cannot be empty.';
+                confirmationModal.show();
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/send/text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ receiver_id, text })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Jika berhasil, tampilkan pesan sukses di modal
+                    modalMessage.textContent = result.message;
+                } else {
+                    // Jika gagal, tampilkan pesan error di modal
+                    modalMessage.textContent = `Failed to send: ${result.message}`;
+                }
+
+                // Tampilkan modal konfirmasi
+                confirmationModal.show();
+            } catch (error) {
+                console.error('Error:', error);
+                modalMessage.textContent = 'Failed to send the message due to a network error.';
+                confirmationModal.show();
+            }
+        });
+
+        // Tombol kembali ke halaman messages
+        document.getElementById('backButton').addEventListener('click', returnToMessages);
+
+    </script>
+
+    <!-- Bootstrap JS (untuk modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+{
+  "name": "project_kripto",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000P\u0000r\u0000o\u0000j\u0000e\u0000c\u0000t\u0000_\u0000I\u0000T\u0000C\u0000_\u0000S\u0000t\u0000a\u0000r\u0000t\u0000e\u0000r\u0000_\u0000P\u0000a\u0000c\u0000k\u0000\r\u0000 \u0000",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^2.2.0",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.9.2",
+    "sequelize": "^6.37.5",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
